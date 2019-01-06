@@ -6,7 +6,7 @@ var logger = require('morgan');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
-
+const mongoose = require('mongoose');
 var app = express();
 
 // view engine setup
@@ -18,6 +18,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+mongoose
+    .connect(
+        'mongodb://mongo:27017/express-mongo',
+        { useNewUrlParser: true }
+    )
+    .then(() => console.log('MongoDB Connected'))
+    .catch(err => console.log(err));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -37,5 +45,7 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+
 
 module.exports = app;
