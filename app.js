@@ -1,51 +1,46 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-const mongoose = require('mongoose');
-var app = express();
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
-
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
-
-mongoose
-    .connect(
-        'mongodb://mongo:27017/express-mongo',
-        { useNewUrlParser: true }
-    )
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
-
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+const express = require("express")
+// const path = require("path")
+const bodyParser = require("body-parser")
+const passport = require("passport")
+const mongoose = require("mongoose")
+const  config = require("./config/database")
 
 
+mongoose.connect(config.database)
+mongoose.connection.on("connected", () =>  console.log(`Connected to DB ${config.database}`) )
+mongoose.connection.on("error", err =>  console.log(`DB error : ${err}`) )
 
-module.exports = app;
+
+// Server settings
+const app = express()
+const port =  8080
+const connect = require("./routes/comments")
+const profile = require("./routes/profile")
+const search = require("./routes/search")
+const posts = require("./routes/posts")
+const comments = require("./routes/comments")
+
+
+// Middlewares
+app.use(cors())
+app.use(bodyParser.json())
+// Passport Middleware
+app.use(passport.initialize())
+app.use(passport.session())
+require("./config/passport")(passport)
+
+// html files
+// app.use(express.static(path.join(__dirname, "public")))
+
+// Routes
+app.use("connect/", connect)
+app.use("profile/", profile)
+app.use("posts/", posts)
+app.use("search/", search)
+app.use("posts/", posts)
+app.use("comments/", comments)
+app.get("/", (req, res) =>  res.status(200).send("First GET.") )
+
+
+// Start the server
+app.listen(port, () => console.log(`Listening to port #${port}`) )
