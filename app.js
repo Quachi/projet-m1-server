@@ -1,5 +1,4 @@
 const express = require("express")
-// const path = require("path")
 const bodyParser = require("body-parser")
 const passport = require("passport")
 const mongoose = require("mongoose")
@@ -29,8 +28,6 @@ app.use(passport.initialize())
 app.use(passport.session())
 require("./config/passport")(passport)
 
-// html files
-// app.use(express.static(path.join(__dirname, "public")))
 
 // Routes
 app.use("connect/", connect)
