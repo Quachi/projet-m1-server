@@ -3,6 +3,7 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 const bcrypt = require("bcryptjs")
 
 const ProfileSchema = mongoose.Schema({
+    id: {type: String, required: true, default: [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')},
     username: {type: String, required: true},
     password: {type: String, required: true},
     mail: {type: String, require: true},
@@ -13,16 +14,10 @@ const ProfileSchema = mongoose.Schema({
     historyPosts: [ObjectId],
     historyComments: [ObjectId]
 })
-
-const UserSchema = mongoose.Schema({
-    username: {type: String, required: true},
-    mail: {type: String, required: true},
-    password: {type: String, required: true, default: "haha"}
-})
-
 const Profile = module.exports = mongoose.model("Profile", ProfileSchema)
 
-module.exports.getProfileById = (id, callback) => Profile.findById(id, callback)
+
+module.exports.getProfileById = (id, callback) => Profile.findOne({"id": id}, callback)
 module.exports.getProfileByUsername = (username, callback) => Profile.findOne({username:username}, callback)
 module.exports.addProfile = (newUser, callback) => {
     bcrypt.genSalt(16, (err, salt) => {
@@ -33,7 +28,6 @@ module.exports.addProfile = (newUser, callback) => {
         })
     })
 }
-
 module.exports.comparePassword = (password, hash, callback) => {
     bcrypt.compare(password, hash, (err, match) => {
         if(err) { throw(err) }

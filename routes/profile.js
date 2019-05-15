@@ -13,19 +13,14 @@ router.post("/register", (req, res, next) => {
         mail: req.body.mail,
         password: req.body.password,
     })
-    console.log(newProfile)
     Profile.addProfile(newProfile, (err, profile) => {
         if(err)
             return res.status(403).send("Error when creating an account")
-        console.log("New account !")
         res.status(200).send({success: true, message: "Profile created !"})
     })
 })
 
-router.post("/login", (req, res, next) => {
-    console.log(req.body)
-    console.log(req.body.username)
-    console.log(typeof req.body.username)        
+router.get("/login", (req, res, next) => {
     const username = req.body.username
     const password = req.body.password
     Profile.getProfileByUsername(username, (err, profile) => {
@@ -38,7 +33,7 @@ router.post("/login", (req, res, next) => {
                 const token = jwt.sign(profile.toJSON(), config.secret, {expiresIn: 604800})
                 res.status(200).send({
                     success: true,
-                    token: "JWT "+token,
+                    token: token,
                     profile: {id: profile._id, username: profile.username, mail: profile.mail}
                 })
             }
@@ -49,9 +44,8 @@ router.post("/login", (req, res, next) => {
 
 router.get("/logout", (req, res, next) => { res.status(200).send("logout") })
 
-router.get("/profile", passport.authenticate("jwt", {session:false}), (req, res, next) => {
-    const data = {username: req.profile.username, mail: req.profile.mail}
-    res.status(200).send({success: true, profile: data})
+router.get("/infos", passport.authenticate("jwt", {session:false}), (req, res, next) => {
+    res.status(200).send({"data": req.user})
  })
 
 
