@@ -26,16 +26,13 @@ router.post("/new", passport.authenticate("jwt", {session: false}), (req, res, n
             Type.find({id: {$in: req.body.types}}, {id: 0, name: 0}, (err, types) => {
                 if(err) { callback(err, null) }
                 types.forEach(type => {
-                    post.types.push(type._id)
+                    post.typeId.push(type._id)
                 })
                 callback(null, post)
             })
         }
     ], (err, post) => {
         if(err) { res.status(400).send(err) }
-        console.log("----------")
-        console.log(post)
-        console.log("----------")
         post.save((err, newPost) => {
             if(err) { return res.status(500).send({error: err}) }
             return res.status(201).send({id: newPost.id})

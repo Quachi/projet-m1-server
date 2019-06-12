@@ -8,7 +8,7 @@ const PostSchema = mongoose.Schema({
     userId : {type: String, require: true},
     name: {type: String, require: true},
     description: {type: String, default: "No description"},
-    types: [{type: ObjectId, require: true, ref: "Type"}],
+    typeId: [{type: ObjectId, require: true, ref: "Type"}],
     medias: [ObjectId],
     users: {type: [ObjectId], default: [], ref: "Profile"},
     likes: {type: Number, require: true, default: 1},
