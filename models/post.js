@@ -3,6 +3,9 @@ const ObjectId = mongoose.Schema.Types.ObjectId
 
 const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
 
+
+
+
 const PostSchema = mongoose.Schema({
     id: {type: String, require: true, default: randomId()},
     userId : {type: String, require: true},
@@ -12,7 +15,8 @@ const PostSchema = mongoose.Schema({
     medias: [ObjectId],
     users: {type: [ObjectId], default: [], ref: "Profile"},
     likes: {type: Number, require: true, default: 1},
-    tags: [String]
+    tags: [String],
+    date: {type: Number, require: true, default: new Date().getTime()}
 })
 
 const Post = module.exports = mongoose.model("Post", PostSchema)

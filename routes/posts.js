@@ -1,4 +1,5 @@
 const express = require("express")
+const multer  = require('multer')
 const passport = require("passport")
 const mongoose = require("mongoose")
 const async = require("async")
@@ -7,6 +8,18 @@ const Post = require("../models/post")
 const Type = require("../models/type")
 
 const router = express.Router()
+// const upload = multer({ dest: 'uploads/' })
+
+const upload = multer({
+    dest: "uploads/",
+    fileFilter: (req, file, cb) => {
+        switch(file.mimetype) {
+            case "image/png": cb(null, true); break
+            case "image/jpeg": cb(null, true); break
+            default: cb(new Error("Wrong type !")); break
+        }
+    }
+})
 
 /**
  * create post (POST)
@@ -38,6 +51,11 @@ router.post("/new", passport.authenticate("jwt", {session: false}), (req, res, n
             return res.status(201).send({id: newPost.id})
         })
     })
+})
+
+router.post("/upload", passport.authenticate("jwt", {session: false}), upload.single("avatar"), (req, res, next) => {
+    if(req.is("multipart/form-data") != false)
+    res.status(200).send()
 })
 
 router.get("/:id", (req, res, next) => {
