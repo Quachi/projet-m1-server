@@ -16,12 +16,10 @@ const init = new Initialize()
 init.loadTypes()
 const app = express()
 const port =  8080
-// const connect = require("./routes/comments")
-const profile = require("./routes/profiles")
-// const search = require("./routes/search")
-const post = require("./routes/posts")
-// const comment = require("./routes/comments")
 
+const profile = require("./routes/profiles")
+const post = require("./routes/posts")
+const media = require("./routes/medias")
 
 // Middlewares
 app.use(bodyParser.json())
@@ -32,12 +30,9 @@ require("./config/passport")(passport)
 
 
 // Routes
-// app.use("connect/", connect)
 app.use("/profile", profile)
 app.use("/post", post)
-// app.use("search/", search)
-// app.use("posts/", posts)
-// app.use("comments/", comments)
+app.use("/media", media)
 app.get("/", (req, res) =>  res.status(200).send("First GET.") )
 
 
