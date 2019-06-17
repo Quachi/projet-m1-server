@@ -3,7 +3,6 @@ const multer  = require('multer')
 const passport = require("passport")
 const mongoose = require("mongoose")
 const async = require("async")
-const sharp = require("sharp")
 
 const Post = require("../models/post")
 const Media = require("../models/media")
@@ -20,33 +19,19 @@ const upload = multer({
     }
 })
 
-router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res, next) => {
-    if(!req.is("multipart/form-data"))
-        return res.status(400).send()
-    async.parallel(req.files.map(img => function(callback) {
-        let media = new Media({data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`})
-        media.save((err, element) => {
-            if(err) { callback(err, null) }
-            callback(null, `/media/${element.id}`)
-        })
-    }), (err, data) => {
+router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res) => {
+    const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+    const media = req.files.map(img => {
+        const image =  {id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}
+        return image
+    })
+    Media.insertMany(media, (err, medias) => {
         if(err) { return res.status(500).send(err) }
-        async.waterfall([ callback => {
-            let post = new Post(req.body)
-            post.media = data
-            callback(null, post)
-        }, (post, callback) => {
-            Type.find({id: {$in: req.body.types}}, {id: 0, name: 0}, (err, types) => {
-                if (err) { callback(err, numm) }
-                types.forEach(type => post.typeId.push(type._id))
-                callback(null, post)
-            })
-        }], (err, post) => {
+        req.body["media"] = medias.map(img => img.id)
+        const post = new Post(req.body)
+        post.save((err, post) => {
             if(err) { return res.status(500).send(err) }
-            post.save((err, post) => {
-                if(err) { return res.status(400).send(err) }
-                return res.status(201).send({id: post.id})
-            })
+            return res.status(200).send({id: post.id})
         })
     })
 })
@@ -71,5 +56,15 @@ router.put("/:id", passport.authenticate("jwt", {session: false}), (req, res, ne
     })
     return res.status(403).send()
 })
-
+function addMedia(img){
+    return new Promise((resolve, reject) => {
+        new Media({data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}).save(
+            (err, media) => {
+                console.log('media', media._id)
+                resolve(null, `/media/${media._id}`);
+                if(err) { reject(err, null) }
+            }
+        )
+    })
+}
 module.exports = router

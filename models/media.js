@@ -1,10 +1,8 @@
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Schema.Types.ObjectId
 
-const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
-
 const MediaSchema = mongoose.Schema({
-    id: {type: String, require: true, default: randomId()},
+    id: {type: String, require: true},
     data : {type: String, require: true},
 })
 
