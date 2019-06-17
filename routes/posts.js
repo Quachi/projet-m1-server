@@ -3,15 +3,14 @@ const multer  = require('multer')
 const passport = require("passport")
 const mongoose = require("mongoose")
 const async = require("async")
+const sharp = require("sharp")
 
 const Post = require("../models/post")
+const Media = require("../models/media")
 const Type = require("../models/type")
 
 const router = express.Router()
-// const upload = multer({ dest: 'uploads/' })
-
 const upload = multer({
-    dest: "uploads/",
     fileFilter: (req, file, cb) => {
         switch(file.mimetype) {
             case "image/png": cb(null, true); break
@@ -21,41 +20,35 @@ const upload = multer({
     }
 })
 
-/**
- * create post (POST)
- * modify post (PUT)
- * see post (GET)
- * delete post (DELETE)
- * search posts (GET)
- */
-
-router.post("/new", passport.authenticate("jwt", {session: false}), (req, res, next) => {
-    async.waterfall([
-        callback => {
+router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res, next) => {
+    if(!req.is("multipart/form-data"))
+        return res.status(400).send()
+    async.parallel(req.files.map(img => function(callback) {
+        let media = new Media({data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`})
+        media.save((err, element) => {
+            if(err) { callback(err, null) }
+            callback(null, `/media/${element.id}`)
+        })
+    }), (err, data) => {
+        if(err) { return res.status(500).send(err) }
+        async.waterfall([ callback => {
             let post = new Post(req.body)
+            post.media = data
             callback(null, post)
-        },
-        (post, callback) => {
+        }, (post, callback) => {
             Type.find({id: {$in: req.body.types}}, {id: 0, name: 0}, (err, types) => {
-                if(err) { callback(err, null) }
-                types.forEach(type => {
-                    post.typeId.push(type._id)
-                })
+                if (err) { callback(err, numm) }
+                types.forEach(type => post.typeId.push(type._id))
                 callback(null, post)
             })
-        }
-    ], (err, post) => {
-        if(err) { res.status(400).send(err) }
-        post.save((err, newPost) => {
-            if(err) { return res.status(500).send({error: err}) }
-            return res.status(201).send({id: newPost.id})
+        }], (err, post) => {
+            if(err) { return res.status(500).send(err) }
+            post.save((err, post) => {
+                if(err) { return res.status(400).send(err) }
+                return res.status(201).send({id: post.id})
+            })
         })
     })
-})
-
-router.post("/upload", passport.authenticate("jwt", {session: false}), upload.single("avatar"), (req, res, next) => {
-    if(req.is("multipart/form-data") != false)
-    res.status(200).send()
 })
 
 router.get("/:id", (req, res, next) => {

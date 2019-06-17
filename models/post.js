@@ -12,7 +12,7 @@ const PostSchema = mongoose.Schema({
     name: {type: String, require: true},
     description: {type: String, default: "No description"},
     typeId: [{type: ObjectId, require: true, ref: "Type"}],
-    medias: [ObjectId],
+    media: [String],
     users: {type: [ObjectId], default: [], ref: "Profile"},
     likes: {type: Number, require: true, default: 1},
     tags: [String],
