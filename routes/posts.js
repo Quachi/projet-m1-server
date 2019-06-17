@@ -56,15 +56,5 @@ router.put("/:id", passport.authenticate("jwt", {session: false}), (req, res, ne
     })
     return res.status(403).send()
 })
-function addMedia(img){
-    return new Promise((resolve, reject) => {
-        new Media({data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}).save(
-            (err, media) => {
-                console.log('media', media._id)
-                resolve(null, `/media/${media._id}`);
-                if(err) { reject(err, null) }
-            }
-        )
-    })
-}
+
 module.exports = router
