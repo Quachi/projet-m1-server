@@ -19,6 +19,7 @@ const port =  8080
 
 const profile = require("./routes/profiles")
 const post = require("./routes/posts")
+const comment = require("./routes/comments")
 const media = require("./routes/medias")
 
 // Middlewares
@@ -32,9 +33,31 @@ require("./config/passport")(passport)
 // Routes
 app.use("/profile", profile)
 app.use("/post", post)
+app.use("/comment", comment)
 app.use("/media", media)
 app.get("/", (req, res) =>  res.status(200).send("First GET.") )
 
 
 // Start the server
 app.listen(port, () => console.log(`Listening to port #${port}`) )
+
+
+
+/**
+ * modification d'une annonce
+ * recherche d'annonce avec paramètres
+ * recherche d'annonce
+ */
+
+/**
+ * vue détaillé d'un profile (50%)
+ * commenter une annonce
+ * s'inscrire à une annonce
+ * 
+ */
+
+
+ /**
+  * modifier le profile
+  * commenter un profile
+  */
