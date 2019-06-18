@@ -51,6 +51,32 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
     })
 })
 
+router.put("/subscribe/:id", passport.authenticate("jwt", {session: falese}), (req, res, next) => {
+    Post.findOne({id: req.params.id}, (err, post) => {
+        if(err)
+            return res.status(404).send(err)
+        if(post.user == req.user.id)
+            return res.status(403).send({error: "Cannot subscribe: it is your own post"})
+        if(post.group != post.group.filter(user => user != req.user.id)) {
+            post.group = post.group.filter(user => user != req.user.id)
+            post.save((err, post) => {
+                if(err) { return res.status(500).send(err) }
+                delete post._id
+                return res.status(205).send(post)
+            })
+        }
+        if(post.groupSize > post.group.length) {
+            post.group.push(req.user.id)
+            post.save((err, post) => {
+                if(err) { return res.status(500).send(err) }
+                delete post._id
+                return res.status(200).send(post)
+            })
+        }
+        res.status(403).send({error: "Cannot subscribe : the group is full"})
+    })
+})
+
 router.get("/:id", (req, res, next) => {
     Post.findOne({id:req.params.id}, (err, post) => {
         if(err) { return res.status(404).send() }
