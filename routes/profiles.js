@@ -8,14 +8,12 @@ const router = express.Router()
 
 const projections = {_id: 0, username: 1, avatar: 1, description: 1, posts: 1, comments: 1}
 const putOptions = {new: true, useFindAndModify: false}
-// all users routes
+
 router.post("/register", (req, res, next) => {
-    let newProfile = new Profile({
-        username: req.body.username,
-        mail: req.body.mail,
-        password: req.body.password,
+    Profile.findOne({mail: req.body.mail}, (err, profile) => {
+        if(profile != undefined) { res.status(409).send({error: "Email address already registered."}) }
     })
-    Profile.addProfile(newProfile, (err, profile) => {
+    Profile.addProfile(req.body, (err, profile) => {
         if(err)
             return res.status(403).send("Error when creating an account")
         res.status(200).send({success: true, message: "Profile created !"})
