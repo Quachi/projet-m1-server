@@ -19,19 +19,34 @@ const upload = multer({
     }
 })
 
+
 router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res) => {
     const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
     const media = req.files.map(img => {
         const image =  {id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}
         return image
     })
-    Media.insertMany(media, (err, medias) => {
-        if(err) { return res.status(500).send(err) }
-        req.body["media"] = medias.map(img => img.id)
-        const post = new Post(req.body)
+    async.waterfall([
+        callback => {
+            Type.find({"id": {$in: req.body.categories}}, {_id: 1}, (err, types) => {
+                if(err) { callback(err, null) }
+                let data = req.body
+                data.categories = types
+                callback(null, data)
+            })
+        }, (data, callback) => {
+            Media.insertMany(media, (err, medias) => {
+                if(err) {callback(err, null)}
+                data["medias"] = medias.map(img => img.id)
+                callback(null, data)
+            })
+        }
+    ], (err, data) => {
+        data.user = req.user.id
+        const post = new Post(data)
         post.save((err, post) => {
             if(err) { return res.status(500).send(err) }
-            return res.status(200).send({id: post.id})
+            return res.status(201).send({id: post.id})
         })
     })
 })
