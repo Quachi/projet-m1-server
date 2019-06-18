@@ -51,7 +51,7 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
     })
 })
 
-router.put("/subscribe/:id", passport.authenticate("jwt", {session: falese}), (req, res, next) => {
+router.put("/subscribe/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
     Post.findOne({id: req.params.id}, (err, post) => {
         if(err)
             return res.status(404).send(err)
