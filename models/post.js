@@ -12,7 +12,8 @@ const PostSchema = mongoose.Schema({
     tags: [String],
     groupSize: {type: Number, require: true, default: 1},
     group: {type: [String], default: []},
-    timestamp: {type: Number, require: true, default: new Date().getTime()}
+    timestamp: {type: Number, require: true, default: new Date().getTime()},
+    postal: {type: Number, require: true}
 })
 
 const Post = module.exports = mongoose.model("Post", PostSchema)

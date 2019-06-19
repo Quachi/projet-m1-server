@@ -14,7 +14,8 @@ const ProfileSchema = mongoose.Schema({
     posts: [ObjectId],
     comments: [ObjectId],
     historyPosts: [ObjectId],
-    historyComments: [ObjectId]
+    historyComments: [ObjectId],
+    postal: Number
 })
 const Profile = module.exports = mongoose.model("Profile", ProfileSchema)
 
