@@ -19,20 +19,61 @@ const upload = multer({
     }
 })
 
+
 router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res) => {
     const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
     const media = req.files.map(img => {
         const image =  {id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}
         return image
     })
-    Media.insertMany(media, (err, medias) => {
-        if(err) { return res.status(500).send(err) }
-        req.body["media"] = medias.map(img => img.id)
-        const post = new Post(req.body)
+    async.waterfall([
+        callback => {
+            Type.find({"id": {$in: req.body.categories}}, {_id: 1}, (err, types) => {
+                if(err) { callback(err, null) }
+                let data = req.body
+                data.categories = types
+                callback(null, data)
+            })
+        }, (data, callback) => {
+            Media.insertMany(media, (err, medias) => {
+                if(err) {callback(err, null)}
+                data["medias"] = medias.map(img => img.id)
+                callback(null, data)
+            })
+        }
+    ], (err, data) => {
+        data.user = req.user.id
+        const post = new Post(data)
         post.save((err, post) => {
             if(err) { return res.status(500).send(err) }
-            return res.status(200).send({id: post.id})
+            return res.status(201).send({id: post.id})
         })
+    })
+})
+
+router.put("/subscribe/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
+    Post.findOne({id: req.params.id}, (err, post) => {
+        if(err)
+            return res.status(404).send(err)
+        if(post.user == req.user.id)
+            return res.status(403).send({error: "Cannot subscribe: it is your own post"})
+        if(post.group != post.group.filter(user => user != req.user.id)) {
+            post.group = post.group.filter(user => user != req.user.id)
+            post.save((err, post) => {
+                if(err) { return res.status(500).send(err) }
+                delete post._id
+                return res.status(205).send(post)
+            })
+        }
+        if(post.groupSize > post.group.length) {
+            post.group.push(req.user.id)
+            post.save((err, post) => {
+                if(err) { return res.status(500).send(err) }
+                delete post._id
+                return res.status(200).send(post)
+            })
+        }
+        res.status(403).send({error: "Cannot subscribe : the group is full"})
     })
 })
 

@@ -8,4 +8,4 @@ const MediaSchema = mongoose.Schema({
 
 const Media = module.exports = mongoose.model("Media", MediaSchema)
 
-module.exports.getById = (id, callback) => Post.findOne({id: id}, callback)
+module.exports.getById = (id, callback) => Media.findOne({id: id}, callback)

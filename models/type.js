@@ -7,3 +7,4 @@ const TypeSchema = mongoose.Schema({
 })
 
 const Type = module.exports = mongoose.model("Type", TypeSchema)
+module.exports.getById = (id, callback) => Type.findOne({id: id}, callback)
