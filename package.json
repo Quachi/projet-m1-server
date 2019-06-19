@@ -9,6 +9,7 @@
     "async": "^2.6.2",
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.18.3",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.5.2",
