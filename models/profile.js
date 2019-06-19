@@ -21,7 +21,6 @@ const Profile = module.exports = mongoose.model("Profile", ProfileSchema)
 
 
 module.exports.getProfileById = (id, callback) => Profile.findOne({id: id}, callback)
-module.exports.getProfileByUsername = (username, callback) => Profile.findOne({username:username}, callback)
 module.exports.addProfile = (newUser, callback) => {
     bcrypt.genSalt(16, (err, salt) => {
         if(err) { throw(err) }

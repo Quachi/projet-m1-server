@@ -21,7 +21,7 @@ router.post("/register", (req, res, next) => {
 })
 
 router.post("/login", (req, res, next) => {
-    Profile.getProfileByUsername(req.body.username, (err, profile) => {
+    Profile.findOne({username: req.body.username}, (err, profile) => {
         if(err || !profile) { return res.status(401).send({error: "Wrong username"}) }
         Profile.comparePassword(req.body.password, profile.password, (err, match) => {
             if(err) { return res.status(401).send({error: "Wrong password"}) }
