@@ -44,6 +44,7 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
     ], (err, data) => {
         data.user = req.user.id
         const post = new Post(data)
+        post.postal = post.postal ? post.postal : req.user.postal
         post.save((err, post) => {
             if(err) { return res.status(500).send(err) }
             return res.status(201).send({id: post.id})
@@ -74,6 +75,26 @@ router.put("/subscribe/:id", passport.authenticate("jwt", {session: false}), (re
             })
         }
         res.status(403).send({error: "Cannot subscribe : the group is full"})
+    })
+})
+
+router.get("/search", (req, res) => {
+    let conditions = {}
+    if(req.query.categories && req.query.tags) {
+        conditions[$and] = [
+            {$or: req.query.categories.split(",").map(element => { return {categories: element} })},
+            {$or: req.query.tags.split(",").map(element => { return {categories: element} })},
+        ]    
+    }
+    else if(req.query.categories)
+        conditions["$or"] = req.query.categories.split(",").map(element => {return {categories: element} })
+    else if(req.query.tags)
+        conditions["$or"] = req.query.categories.split(",").map(element => { return {tags: element} })
+    if(req.query.name) { conditions["name"] = {$regex: new RegExp(req.query.name, "i")} }
+    if(req.query.postal) { conditions["postal"] = req.query.postal}
+    Post.find(conditions, (err, posts) => {
+        if(err) { return res.status(404).send() }
+        return res.status(200).send(posts)
     })
 })
 
