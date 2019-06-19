@@ -20,23 +20,19 @@ router.post("/register", (req, res, next) => {
     })
 })
 
-router.get("/login", (req, res, next) => {
-    const username = req.body.username
-    const password = req.body.password
-    Profile.getProfileByUsername(username, (err, profile) => {
-        if(err) { throw(err) }
-        if(!profile) { res.status(401).send({success: false, message: "Profile not found"}) }
-        Profile.comparePassword(password, profile.password, (err, match) => {
-            if(err) { throw(err) }
+router.post("/login", (req, res, next) => {
+    Profile.getProfileByUsername(req.body.username, (err, profile) => {
+        if(err || !profile) { return res.status(401).send({error: "Wrong username"}) }
+        Profile.comparePassword(req.body.password, profile.password, (err, match) => {
+            if(err) { return res.status(401).send({error: "Wrong password"}) }
             if(match) {
                 const data = {
-
                     token: jwt.sign(profile.toJSON(), config.secret, {expiresIn: 604800}),
                     expiresIn: 604800
                 }
-                res.status(200).send(data)
+                return res.status(200).send(data)
             }
-            else { res.status(401).send({"error": "Error when login"}) }
+            res.status(401).send({"error": "Error when login"})
         })
     })
 })
