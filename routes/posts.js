@@ -54,9 +54,8 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
         callback => {
             Type.find({"id": {$in: req.body.categories}}, {_id: 1}, (err, types) => {
                 if(err) { callback(err, null) }
-                let data = req.body
-                data.categories = types
-                callback(null, data)
+                req.body.categories = types
+                callback(null, req.body)
             })
         }, (data, callback) => {
             Media.insertMany(media, (err, medias) => {
@@ -82,7 +81,7 @@ router.put("/join/:id", passport.authenticate("jwt", {session: false}), (req, re
         if(err) { return res.status(404).send() }
         if(post.user==req.user.id || post.unsub.filter(user => user===req.user.id).length())
             return res.status(400).send({error: "Can't join the group"})
-        const len = post.group.filter(user => user === req.user.id).length
+        const len = post.attendees.filter(user => user === req.user.id).length
         const data = len ? subPost(post, req.user.id) : unsubPost(post, req.user.id)
         res.status(200).send(data)
     })
@@ -117,17 +116,39 @@ router.get("/:id", (req, res, next) => {
     })
 })
 
-// router.put("/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
-//     req.user.posts.forEach(element => {
-//         if(element == req.params.id) {
-//             Post.findByIdAndUpdate({id:req.params.id}, req.body, (err, post) => {
-//                 if(err) { return res.status(500).send({error: err}) }
-//                 delete post._id
-//                 return res.status(200).send(post)
-//             })
-//         }
-//     })
-//     return res.status(403).send()
-// })
+router.put("/:id", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res, next) => {
+    Post.findOne({id: req.params.id}, (err, post) => {
+        if(err) { return res.status(404).send() }
+        if(post.user != req.user.id) { return res.status(405).send({error: "Cannot modify this post"}) }
+    })
+    const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
+    const media = req.files.map(img => {
+        const image =  {id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString("base64")}`}
+        return image
+    })
+    async.waterfall([
+        callback => {
+            if(!req.body.categories) { callback(null, req.body) }
+            Type.find({"id": {$in: req.body.categories}}, {_id: 1}, (err, types) => {
+                if(err) { callback(err, null) }
+                req.body.categories = types
+                callback(null, req.body)
+            })
+        }, (data, callback) => {
+            Media.insertMany(media, (err, medias) => {
+                if(err) {callback(err, null)}
+                data["medias"] = medias.map(img => img.id)
+                callback(null, data)
+            })
+        }
+    ], (err, data) => {
+        if(err) { return res.status(500).send(err) }
+        ["name", "user", "attendees", "wailist", "unsub"].forEach(element => delete data[element])
+        Post.findOneAndUpdate({id: data.id}, data, (err, post) => {
+            if(err) { return res.status(500).send(err) }
+            return res.status(200).send(post)
+        })
+    })
+})
 
 module.exports = router

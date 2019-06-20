@@ -11,7 +11,6 @@ const PostSchema = mongoose.Schema({
     categories: [{type: ObjectId, require: true, ref: "Type"}],
     tags: [String],
     groupSize: {type: Number, require: true, default: 1},
-    group: {type: [String], default: []},
     attendees: {type: [String], default: []},
     wailist: {type: [String], default: []},
     unsub: {type: [String], default: []},
