@@ -80,6 +80,7 @@ router.put("/subscribe/:id", passport.authenticate("jwt", {session: false}), (re
 
 router.get("/search", (req, res) => {
     let conditions = {}
+    const page = req.query.page ? req.query.page : 0
     if(req.query.categories && req.query.tags) {
         conditions[$and] = [
             {$or: req.query.categories.split(",").map(element => { return {categories: element} })},
@@ -92,7 +93,7 @@ router.get("/search", (req, res) => {
         conditions["$or"] = req.query.categories.split(",").map(element => { return {tags: element} })
     if(req.query.name) { conditions["name"] = {$regex: new RegExp(req.query.name, "i")} }
     if(req.query.postal) { conditions["postal"] = req.query.postal}
-    Post.find(conditions, (err, posts) => {
+    Post.find(conditions, {_id: 0}, {skip: page, limit: page+10}, (err, posts) => {
         if(err) { return res.status(404).send() }
         return res.status(200).send(posts)
     })
