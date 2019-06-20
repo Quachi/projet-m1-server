@@ -66,6 +66,7 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
             })
         }
     ], (err, data) => {
+        if(err) { return res.status(500).send(err) }
         data.user = req.user.id
         const post = new Post(data)
         post.postal = post.postal ? post.postal : req.user.postal
