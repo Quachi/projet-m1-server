@@ -20,6 +20,30 @@ const upload = multer({
 })
 
 
+const subPost = (post, user) => {
+    if(post.attendees.length < post.groupSize && !post.waitlist.filter(el => el == user).length) {
+        post.wailist.push(user)
+    }
+    else { post.attendees.push(user) }
+    post.save((err, post) => {
+        delete post._id; delete post.unsub
+        return post != undefined ? post : err
+    })
+}
+
+const unsubPost = (post, user) => {
+    post.attendees = post.attendees.filter(el => el != user)
+    post.unsub.push(user)
+    if(post.attendees.length != post.groupSize && post.wailist.length){
+        post.attendees.push(post.wailist[0])
+        post.wailist.shift()
+    }
+    post.save((err, post) => {
+        delete post._id; delete post.unsub
+        return post != undefined ? post : err
+    })
+}
+
 router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res) => {
     const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
     const media = req.files.map(img => {
@@ -52,29 +76,14 @@ router.post("/new", passport.authenticate("jwt", {session: false}), upload.array
     })
 })
 
-router.put("/subscribe/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
+router.put("/join/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
     Post.findOne({id: req.params.id}, (err, post) => {
-        if(err)
-            return res.status(404).send(err)
-        if(post.user == req.user.id)
-            return res.status(403).send({error: "Cannot subscribe: it is your own post"})
-        if(post.group != post.group.filter(user => user != req.user.id)) {
-            post.group = post.group.filter(user => user != req.user.id)
-            post.save((err, post) => {
-                if(err) { return res.status(500).send(err) }
-                delete post._id
-                return res.status(205).send(post)
-            })
-        }
-        if(post.groupSize > post.group.length) {
-            post.group.push(req.user.id)
-            post.save((err, post) => {
-                if(err) { return res.status(500).send(err) }
-                delete post._id
-                return res.status(200).send(post)
-            })
-        }
-        res.status(403).send({error: "Cannot subscribe : the group is full"})
+        if(err) { return res.status(404).send() }
+        if(post.user==req.user.id || post.unsub.filter(user => user===req.user.id).length())
+            return res.status(400).send({error: "Can't join the group"})
+        const len = post.group.filter(user => user === req.user.id).length
+        const data = len ? subPost(post, req.user.id) : unsubPost(post, req.user.id)
+        res.status(200).send(data)
     })
 })
 
@@ -107,17 +116,17 @@ router.get("/:id", (req, res, next) => {
     })
 })
 
-router.put("/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
-    req.user.posts.forEach(element => {
-        if(element == req.params.id) {
-            Post.findByIdAndUpdate({id:req.params.id}, req.body, (err, post) => {
-                if(err) { return res.status(500).send({error: err}) }
-                delete post._id
-                return res.status(200).send(post)
-            })
-        }
-    })
-    return res.status(403).send()
-})
+// router.put("/:id", passport.authenticate("jwt", {session: false}), (req, res, next) => {
+//     req.user.posts.forEach(element => {
+//         if(element == req.params.id) {
+//             Post.findByIdAndUpdate({id:req.params.id}, req.body, (err, post) => {
+//                 if(err) { return res.status(500).send({error: err}) }
+//                 delete post._id
+//                 return res.status(200).send(post)
+//             })
+//         }
+//     })
+//     return res.status(403).send()
+// })
 
 module.exports = router

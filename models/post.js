@@ -12,6 +12,9 @@ const PostSchema = mongoose.Schema({
     tags: [String],
     groupSize: {type: Number, require: true, default: 1},
     group: {type: [String], default: []},
+    attendees: {type: [String], default: []},
+    wailist: {type: [String], default: []},
+    unsub: {type: [String], default: []},
     timestamp: {type: Number, require: true, default: new Date().getTime()},
     postal: {type: Number, require: true}
 })
