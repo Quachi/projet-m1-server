@@ -104,7 +104,7 @@ router.get("/search", (req, res) => {
     Post.find(conditions, {_id: 0}, {skip: page, limit: page+10}, (err, posts) => {
         if(err) { return res.status(404).send() }
         posts.forEach((value, index) => {
-            ["__id", "description", "waitlist", "unsub", "postal"].forEach(key => delete posts[index][key])
+            ["__id", "description", "waitlist", "unsub", "postal", "__v"].forEach(key => delete posts[index][key])
             posts[index].medias.splice(1)
         })
         return res.status(200).send(posts)
