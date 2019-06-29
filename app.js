@@ -3,7 +3,7 @@ const bodyParser = require("body-parser")
 const passport = require("passport")
 const mongoose = require("mongoose")
 const config = require("./config/database")
-var cors = require('cors');
+const cors = require('cors');
 
 
 const Initialize = require("./config/init")
@@ -14,7 +14,7 @@ mongoose.connection.on("error", err =>  console.log(`DB error : ${err}`) )
 const init = new Initialize()
 init.loadTypes()
 
-var app = express();
+let app = express();
 app.use(cors());
 const port =  8080
 
