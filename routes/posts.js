@@ -1,7 +1,6 @@
 const express = require("express")
 const multer  = require('multer')
 const passport = require("passport")
-const mongoose = require("mongoose")
 const async = require("async")
 
 const Post = require("../models/post")
@@ -104,6 +103,10 @@ router.get("/search", (req, res) => {
     if(req.query.postal) { conditions["postal"] = req.query.postal}
     Post.find(conditions, {_id: 0}, {skip: page, limit: page+10}, (err, posts) => {
         if(err) { return res.status(404).send() }
+        posts.forEach((value, index) => {
+            ["__id", "description", "waitlist", "unsub", "postal"].forEach(key => delete posts[index][key])
+            posts[index].medias.splice(1)
+        })
         return res.status(200).send(posts)
     })
 })
@@ -111,7 +114,7 @@ router.get("/search", (req, res) => {
 router.get("/:id", (req, res, next) => {
     Post.findOne({id:req.params.id}, (err, post) => {
         if(err) { return res.status(404).send() }
-        delete post._id
+        ["_id", "__v"].forEach(key => delete post[key])
         return res.status(200).send(post)
     })
 })
@@ -146,6 +149,7 @@ router.put("/:id", passport.authenticate("jwt", {session: false}), upload.array(
         ["name", "user", "attendees", "wailist", "unsub"].forEach(element => delete data[element])
         Post.findOneAndUpdate({id: data.id}, data, (err, post) => {
             if(err) { return res.status(500).send(err) }
+            ["_id", "__v"].forEach(key => delete post[key])
             return res.status(200).send(post)
         })
     })
