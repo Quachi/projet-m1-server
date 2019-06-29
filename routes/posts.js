@@ -42,6 +42,10 @@ const unsubPost = (post, user) => {
         return post != undefined ? post : err
     })
 }
+const imgToUrl = img => {
+    const [server, port] = ["localhost", "8080"]
+    return img.map(value => `http://${server}:${port}/media/${value}`)
+}
 
 router.post("/new", passport.authenticate("jwt", {session: false}), upload.array("images", 4), (req, res) => {
     const randomId = () => [...Array(64)].map(i=>(~~(Math.random()*36)).toString(36)).join('')
@@ -105,6 +109,7 @@ router.get("/search", (req, res) => {
         if(err) { return res.status(404).send() }
         posts.forEach((value, index) => {
             ["__id", "description", "waitlist", "unsub", "postal", "__v"].forEach(key => delete posts[index][key])
+            post[index].medias = imgToUrl(post[index].medias)
             posts[index].medias.splice(1)
         })
         return res.status(200).send(posts)
@@ -114,7 +119,8 @@ router.get("/search", (req, res) => {
 router.get("/:id", (req, res, next) => {
     Post.findOne({id:req.params.id}, (err, post) => {
         if(err) { return res.status(404).send() }
-        ["_id", "__v"].forEach(key => delete post[key])
+        ["_id", "__v", "unsub"].forEach(key => delete post[key])
+        post.medias = imgToUrl(post.medias)
         return res.status(200).send(post)
     })
 })
