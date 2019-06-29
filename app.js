@@ -16,21 +16,13 @@ init.loadTypes()
 
 var app = express();
 app.use(cors());
-// app.use((req, res, next) => {
-//     console.log("Header");
-//     res.setHeader('Access-Control-Allow-Origin', '*');
-//     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-//     res.setHeader('Access-Control-Allow-Headers', '*');
-//     res.setHeader('Content-Type', 'application/json');
-//     res.setHeader('Accept', 'application/json');
-//     next();
-// });
 const port =  8080
 
 const profile = require("./routes/profiles")
 const post = require("./routes/posts")
 const comment = require("./routes/comments")
 const media = require("./routes/medias")
+const type = require("./routes/types")
 
 // Middlewares
 app.use(bodyParser.json())
@@ -48,6 +40,7 @@ app.use("/profile", profile)
 app.use("/post", post)
 app.use("/comment", comment)
 app.use("/media", media)
+app.use("/type", type)
 app.get("/", (req, res) =>  res.status(200).send("First GET.") )
 
 
