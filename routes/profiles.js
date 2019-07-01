@@ -21,7 +21,8 @@ router.post("/register", (req, res, next) => {
     Profile.findOne({mail: req.body.mail}, (err, profile) => {
         if(profile != undefined) { res.status(409).send({error: "Email address already registered."}) }
     })
-    Profile.addProfile(req.body, (err, profile) => {
+    let profile = new Profile(req.body)
+    Profile.addProfile(profile, (err, profile) => {
         if(err)
             return res.status(403).send("Error when creating an account")
         res.status(200).send({success: true, message: "Profile created !"})

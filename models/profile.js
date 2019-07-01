@@ -21,12 +21,12 @@ const Profile = module.exports = mongoose.model("Profile", ProfileSchema)
 
 
 module.exports.getProfileById = (id, callback) => Profile.findOne({id: id}, callback)
-module.exports.addProfile = (newUser, callback) => {
+module.exports.addProfile = (profile, callback) => {
     bcrypt.genSalt(16, (err, salt) => {
         if(err) { throw(err) }
-        bcrypt.hash(newUser.password, salt, (err, hash) => {
-            newUser.password = hash
-            newUser.save(callback)
+        bcrypt.hash(profile.password, salt, (err, hash) => {
+            profile.password = hash
+            profile.save(callback)
         })
     })
 }
