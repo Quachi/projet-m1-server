@@ -20,8 +20,8 @@ const upload = multer({
 
 
 const subPost = (post, user) => {
-    if(post.attendees.length < post.groupSize && !post.waitlist.filter(el => el == user).length) {
-        post.wailist.push(user)
+    if(post.attendees.length < post.groupSize && !post.waitList.filter(el => el == user).length) {
+        post.waitList.push(user)
     }
     else { post.attendees.push(user) }
     post.save((err, post) => {
@@ -33,9 +33,9 @@ const subPost = (post, user) => {
 const unsubPost = (post, user) => {
     post.attendees = post.attendees.filter(el => el != user)
     post.unsub.push(user)
-    if(post.attendees.length != post.groupSize && post.wailist.length){
-        post.attendees.push(post.wailist[0])
-        post.wailist.shift()
+    if(post.attendees.length != post.groupSize && post.waitList.length){
+        post.attendees.push(post.waitList[0])
+        post.waitList.shift()
     }
     post.save((err, post) => {
         delete post._id; delete post.unsub
@@ -108,7 +108,7 @@ router.get("/search", (req, res) => {
     Post.find(conditions, {_id: 0}, {skip: page, limit: page+10}, (err, posts) => {
         if(err) { return res.status(404).send() }
         posts.forEach((value, index) => {
-            ["__id", "description", "waitlist", "unsub", "postal", "__v"].forEach(key => delete posts[index][key])
+            ["__id", "description", "waitList", "unsub", "postal", "__v"].forEach(key => delete posts[index][key])
             posts[index].medias = imgToUrl(posts[index].medias)
             posts[index].medias.splice(1)
         })
@@ -152,7 +152,7 @@ router.put("/:id", passport.authenticate("jwt", {session: false}), upload.array(
         }
     ], (err, data) => {
         if(err) { return res.status(500).send(err) }
-        ["name", "user", "attendees", "wailist", "unsub"].forEach(element => delete data[element])
+        ["name", "user", "attendees", "waitList", "unsub"].forEach(element => delete data[element])
         Post.findOneAndUpdate({id: data.id}, data, (err, post) => {
             if(err) { return res.status(500).send(err) }
             ["_id", "__v"].forEach(key => delete post[key])

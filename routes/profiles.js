@@ -78,4 +78,12 @@ router.put("/me", passport.authenticate("jwt", {session: false}), upload.single(
     })
 })
 
+router.get("/:id", (req, res, next) => {
+    const projections = {_id:0, password:0, __v:0}
+    Profile.findOne({id: req.params.id}, projections,(err, profile) => {
+        if(err) { res.status(404).send() }
+        return res.status(200).send(profile)
+    })
+})
+
 module.exports = router
