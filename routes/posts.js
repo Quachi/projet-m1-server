@@ -109,7 +109,7 @@ router.get("/search", (req, res) => {
         if(err) { return res.status(404).send() }
         posts.forEach((value, index) => {
             ["__id", "description", "waitlist", "unsub", "postal", "__v"].forEach(key => delete posts[index][key])
-            post[index].medias = imgToUrl(post[index].medias)
+            posts[index].medias = imgToUrl(posts[index].medias)
             posts[index].medias.splice(1)
         })
         return res.status(200).send(posts)
