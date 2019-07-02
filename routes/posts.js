@@ -8,6 +8,7 @@ const Media = require('../models/media');
 const Type = require('../models/type');
 
 const router = express.Router();
+
 const upload = multer({
   fileFilter: (req, file, cb) => {
     switch (file.mimetype) {
