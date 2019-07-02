@@ -1,51 +1,63 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
-
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const express = require('express');
+const bodyParser = require('body-parser');
+const passport = require('passport');
 const mongoose = require('mongoose');
-var app = express();
+const config = require('./config/database');
+const cors = require('cors');
 
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'pug');
+const Initialize = require('./config/init');
+mongoose.connect(config.database, { useNewUrlParser: true });
+mongoose.connection.on('connected', () => console.log(`Connected to DB ${config.database}`));
+mongoose.connection.on('error', err => console.log(`DB error : ${err}`));
+// Server settings
+const init = new Initialize();
+init.loadTypes();
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+let app = express();
+app.use(cors());
+const port = 8080;
 
-mongoose
-    .connect(
-        'mongodb://mongo:27017/express-mongo',
-        { useNewUrlParser: true }
-    )
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+const profile = require('./routes/profiles');
+const post = require('./routes/posts');
+const comment = require('./routes/comments');
+const media = require('./routes/medias');
+const type = require('./routes/types');
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
+// Middlewares
+app.use(bodyParser.json());
+// app.use(cors({ credentials: true, origin: '*' }));
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
-});
+// Passport Middleware
+app.use(passport.initialize());
+app.use(passport.session());
+require('./config/passport')(passport);
 
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+// Routes
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
-});
+app.use('/profile', profile);
+app.use('/post', post);
+app.use('/comment', comment);
+app.use('/media', media);
+app.use('/type', type);
+app.get('/', (req, res) => res.status(200).send('First GET.'));
 
+// Start the server
+app.listen(port, () => console.log(`Listening to port #${port}`));
 
+/**
+ * modification d'une annonce
+ * recherche d'annonce avec paramètres
+ * recherche d'annonce
+ */
 
-module.exports = app;
+/**
+ * vue détaillé d'un profile (50%)
+ * commenter une annonce
+ * s'inscrire à une annonce
+ *
+ */
+
+/**
+ * modifier le profile
+ * commenter un profile
+ */
