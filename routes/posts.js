@@ -60,7 +60,7 @@ const imgToUrl = img => {
 router.post('/new', passport.authenticate('jwt', { session: false }), upload.array('images', 4), (req, res) => {
   const randomId = () => [...Array(64)].map(i => (~~(Math.random() * 36)).toString(36)).join('');
   const media = req.files.map(img => {
-  const image = { id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString('base64')}` };
+    const image = { id: randomId(), data: `data:${img.mimetype};base64,${img.buffer.toString('base64')}` };
     return image;
   });
   async.waterfall(
