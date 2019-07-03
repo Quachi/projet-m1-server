@@ -13,4 +13,11 @@ router.get('/:id', (req, res) => {
   });
 });
 
+router.post("/", (req, res) => {
+  Media.find({id : {$in: req.body.id}}, "id data", (err, medias) => {
+    if(err) { return res.status(400).send(err) }
+    return res.status(200).send()
+  })
+})
+
 module.exports = router;

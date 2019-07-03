@@ -22,13 +22,10 @@ router.get('/', (req, res, next) => {
 });
 
 router.get('/:id', (req, res, next) => {
-  const projections = { _id: 0, password: 0, __v: 0 };
-  Type.findOne({ id: req.params.id }, projections, (err, profile) => {
-    if (err) {
-      res.status(404).send();
-    }
-    return res.status(200).send(profile);
-  });
+  Type.findOne({id: req.params.id}, "id name description",(err, type) => {
+      if(err) { res.status(404).send() }
+      return res.status(200).send(type)
+  })
 });
 
 module.exports = router;

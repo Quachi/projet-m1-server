@@ -4,6 +4,7 @@ const passport = require('passport');
 const async = require('async');
 
 const Post = require('../models/post');
+const Profile = require("../models/profile")
 const Media = require('../models/media');
 const Type = require('../models/type');
 
@@ -143,28 +144,69 @@ router.get('/search', (req, res) => {
   if (req.query.postal) {
     conditions['postal'] = req.query.postal;
   }
-  Post.find(conditions, { _id: 0 }, { skip: page, limit: page + 10 }, (err, posts) => {
-    if (err) {
-      return res.status(404).send();
-    }
-    posts.forEach((value, index) => {
-      ['__id', 'description', 'waitList', 'unsub', 'postal', '__v'].forEach(key => delete posts[index][key]);
-      posts[index].medias = imgToUrl(posts[index].medias);
-      posts[index].medias.splice(1);
-    });
-    return res.status(200).send(posts);
+  async.waterfall([
+    callback => {
+      const projections = "id name medias groupSize attendees postal timestamp"
+      Post.find(conditions, projections, {skip: page, limit: page+10}, (err, posts) => {
+        if(err) { callback(err, null) }
+        posts.forEach((v, x) => posts[x].medias.splice(1))
+        callback(null, posts)
+      })
+    }, (posts, callback) => {
+      let img = []
+      posts.forEach((v, x) => img.push(posts[x].medias[0]))
+      Media.find({id: {$in: img}}, "id data", (err, medias) => {
+        if(err) { callback(err, null) }
+        posts.forEach((value, index) => {  
+          if(value.medias.length == 1) {
+            medias.forEach(img => {
+              posts[index].medias[0] = (value.medias[0]==img.id) ? img.data: value.medias[0]
+            })
+          }
+        })
+        callback(null, posts)
+      })
+    }], (err, data) => {
+      if(err) { res.status(400).send(err)}
+      return res.status(200).send(data)
+    })
   });
-});
 
 router.get('/:id', (req, res, next) => {
-  Post.findOne({ id: req.params.id }, (err, post) => {
-    if (err) {
-      return res.status(404).send();
-    }
-    ['_id', '__v', 'unsub'].forEach(key => delete post[key]);
-    post.medias = imgToUrl(post.medias);
-    return res.status(200).send(post);
-  });
+  async.waterfall([
+    callback => {
+      Post.findOne({id:req.params.id}, {_id:0, __v:0, unsub:0}, (err, post) => {
+        if(err) { callback(err, null) }
+        let data = {}
+        Object.keys(post.toObject()).forEach(key => data[key] = post[key])
+        data.medias = imgToUrl(data.medias);
+        callback(null, data)
+      })
+    }, (data, callback) => {
+      const projections = "id"
+      Profile.findOne({id:data.user}, projections, (err, profile) => {
+        if(err) { callback(err, null)}
+        data.user = profile
+        data.user = profile
+        callback(null, data)
+      })
+    }, (data, callback) => {
+      if(!data.attendees.length)
+        callback(null, data)
+      let attendees = async.times(data.attendees.length, (x, next) => {
+        Profile.findOne({id:data.attendees[x]}, "id username avatar", (err, profile) => {
+          if(err) { next(null)}
+          next(profile)
+        })
+      }, result => result)
+      if(!attendees) { callback(1, null)}
+      data.attendees = attendees
+      callback(null, data)
+    }], (err, data) => {
+    if(err) { return res.status(500).send(err)}
+    delete data.__v
+    return res.status(200).send(data)
+  })
 });
 
 router.put('/:id', passport.authenticate('jwt', { session: false }), upload.array('images', 4), (req, res, next) => {

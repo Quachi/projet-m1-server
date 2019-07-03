@@ -58,8 +58,11 @@ router.post('/login', (req, res, next) => {
 });
 
 router.get('/me', passport.authenticate('jwt', { session: false }), (req, res, next) => {
-  ['_id', 'password'].forEach(element => delete req.user[element]);
-  res.status(200).send(req.user);
+    const projections = {_id:0, password:0, __v:0}
+    Profile.findOne({id:req.user.id}, projections, (err, profile) => {
+        if(err) { res.status(404).send(err) }
+        res.status(200).send(profile)
+    })
 });
 
 router.put('/me', passport.authenticate('jwt', { session: false }), upload.single('avatar'), (req, res, next) => {
