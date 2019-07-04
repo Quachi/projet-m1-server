@@ -17,15 +17,17 @@ router.get('/', (req, res, next) => {
     if (err) {
       return res.status(500).send(err);
     }
-    return res.status(200).send({ data: types });
+    return res.status(200).send(types);
   });
 });
 
 router.get('/:id', (req, res, next) => {
-  Type.findOne({id: req.params.id}, "id name description",(err, type) => {
-      if(err) { res.status(404).send() }
-      return res.status(200).send(type)
-  })
+  Type.findOne({ id: req.params.id }, 'id name description', (err, type) => {
+    if (err) {
+      res.status(404).send();
+    }
+    return res.status(200).send(type);
+  });
 });
 
 module.exports = router;
