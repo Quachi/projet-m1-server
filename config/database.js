@@ -1,4 +1,7 @@
 module.exports = {
-    database: "mongodb://localhost:27017/pm1",
+    database: "mongodb+srv://root:root@cluster0-mxpzt.mongodb.net/pm1?retryWrites=true&w=majority",
     secret: "oulalasecret"
 }
+
+
+
