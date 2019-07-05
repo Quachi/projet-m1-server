@@ -42,7 +42,7 @@ app.use('/type', type);
 app.get('/', (req, res) => res.status(200).send('First GET.'));
 
 // Start the server
-app.listen(port, () => console.log(`Listening to port #${port}`));
+app.listen(process.env.PORT || port, () => console.log(`Listening to port #${port}`));
 
 /**
  * modification d'une annonce
